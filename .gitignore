@@ -1,0 +1,45 @@
+# --- R ---
+.Rhistory
+.Rapp.history
+.RData
+.Ruserdata
+.Rproj.user/
+*.Rproj
+.Renviron
+.Rprofile
+
+# Salidas de knitr / rmarkdown
+*_cache/
+*_files/
+*.knit.md
+*.utf8.md
+/*.html
+/*.pdf
+
+# renv
+renv/library/
+renv/staging/
+
+# --- Python (opcional, para el preprocesamiento) ---
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# --- Salidas del análisis ---
+output/
+resultados/
+figuras/
+*.log
+
+# --- Archivos temporales de Office / OneDrive ---
+~$*
+*.tmp
+.~lock.*
+
+# --- Sistema operativo ---
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
