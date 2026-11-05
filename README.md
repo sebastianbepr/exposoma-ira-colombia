@@ -1,8 +1,8 @@
-# Piloto exposómico — determinantes ambientales de la transmisión de virus respiratorios (Colombia, 2022)
+# Exposición ambiental colombiana como base para el desarrollo de un modelo exposómico de alerta temprana
 
-Código y datos del análisis de la estructura de la matriz de exposición ambiental
-que acompaña al manuscrito *Determinantes ambientales de la transmisión de virus
-respiratorios* (Universidad Militar Nueva Granada).
+Código, datos y salidas del análisis de la estructura de la matriz de exposición ambiental
+(Colombia, 2022) que acompaña al manuscrito del mismo título, en evaluación en la
+*Revista Panamericana de Salud Pública*.
 
 **Autor:** Sebastián A. Beltrán Prieto, MD, MSc (Bioinformática)
 
@@ -10,67 +10,96 @@ respiratorios* (Universidad Militar Nueva Granada).
 
 ```
 exposoma-ira-colombia/
-├── Script.R                              # análisis completo (R)
+├── Script_04.R                           # análisis completo (R), versión 04 del 21/10/2026
 ├── data/
 │   └── BASE_DE_DATOS_ORGANIZADA.xlsx     # matriz climática diaria, hoja "CLIMA"
-├── .gitignore
+├── outputs/                              # tablas y figuras generadas por Script_04.R
+├── .here                                 # marca la raíz del proyecto para here::here()
 ├── LICENSE
 └── README.md
 ```
 
 ## Datos
 
-`data/BASE_DE_DATOS_ORGANIZADA.xlsx`, hoja `CLIMA`. Formato ancho con encabezado
-en dos filas: la primera identifica el departamento (un bloque de columnas por
-departamento, 23 en total) y la segunda las variables dentro de cada bloque.
+`data/BASE_DE_DATOS_ORGANIZADA.xlsx`, hoja `CLIMA`, con registros del IDEAM. Formato ancho con
+encabezado en dos filas: la primera identifica el departamento (un bloque de columnas por
+departamento) y la segunda las variables dentro de cada bloque.
 
-Cobertura: 482 días de 2022, 23 unidades territoriales (22 departamentos + Bogotá).
+- Cobertura: 348 días de 2022 (2 de enero a 15 de diciembre), 23 departamentos.
+- Panel analítico: departamentos con al menos 120 días con registro completo (temperatura
+  mínima, media y máxima y humedad relativa) → 14 departamentos, 3 154 días-departamento
+  (`outputs/completitud.csv`).
+- Algunos encabezados de departamento conservan notas de trabajo del archivo original
+  (p. ej., "CHOCO ORGANIZAR TEMPERATURAS"). Se mantienen sin modificar para no alterar los
+  datos; ninguno de esos departamentos entra en el panel analítico.
 
-Variables por bloque: día, temperatura seca (promedio, mínima, máxima),
-temperatura húmeda, humedad relativa (máxima, mínima, promedio), radiación UV,
-precipitación diaria y altura.
+Variables de exposición analizadas: temperatura media (`T_med`), amplitud térmica diurna
+(`ATD`), humedad relativa (`HR`) y humedad absoluta (`HA`, derivada en el script).
 
-Variables derivadas en el script:
+## Análisis (`Script_04.R`)
 
-| Variable | Definición |
-|---|---|
-| `ATD` | amplitud térmica diurna (`T_max − T_min`) |
-| `es` | presión de vapor de saturación (hPa), fórmula de Bolton |
-| `e` | presión de vapor (hPa) = `es · HR/100` |
-| `HA` | humedad absoluta (g/m³) = `216.7 · e / (T_med + 273.15)` |
+El script está organizado en bloques marcados `__INDEX_xx__`:
 
-## Análisis (`Script.R`)
+| Bloque | Contenido | Salida relacionada en `outputs/` |
+|---|---|---|
+| 00 | Paquetes, rutas y parámetros (semilla `20220101`) | — |
+| 01 | Lectura del libro ancho con encabezado de dos filas | — |
+| 02 | Control de calidad: rangos de plausibilidad y coherencia interna | `calidad.csv` |
+| 03 | Variables derivadas: ATD y humedad absoluta | — |
+| 04 | Panel analítico: completitud y racha máxima | `completitud.csv` |
+| 05 | Correlaciones global, intra- y entre departamentos | `correlacion_global.csv`, `correlacion_intra.csv`, `correlacion_entre.csv`, `humedad_por_departamento.csv` |
+| 06 | ACP diaria: Kaiser, sedimentación y análisis paralelo de Horn | `retencion.csv`, `cargas.csv`, `figura_S1_sedimentacion.png` |
+| 07 | Sensibilidad: sin humedad absoluta e intradepartamental | `sensibilidad.csv`, `congruencia_intra.csv` |
+| 08 | Estabilidad de cargas: bootstrap por conglomerados (congruencia de Tucker) | `bootstrap.csv` |
+| 09 | Estabilidad temporal: ACP mensual y por temporada frente a la anual | `estabilidad.csv` |
+| 10 | ACP de medias departamentales y tipología (Ward, k-medias, silueta) | `tipologia.csv`, `silueta.csv` |
+| 11 | Figuras | `figura_1.png`, `figura_2.png` (y versiones `.eps`) |
+| 12 | Exportación de tablas e información de sesión | `sessionInfo.txt` |
+| 13 | Resumen final en consola | — |
 
-1. Lectura del formato ancho con encabezado de dos filas y paso a formato largo.
-2. Cálculo de variables derivadas (ATD, presión de vapor, humedad absoluta).
-3. Diagnóstico de completitud por departamento y revisión de la escala de precipitación.
-4. Conjunto analítico: departamentos con ≥ 120 observaciones completas.
-5. Estructura de correlación entre `T_med`, `ATD`, `HR` y `HA` (global y por departamento).
-6. ACP sobre la matriz de exposición diaria.
-7. ACP sobre las medias departamentales + k-medias (k = 3) para una tipología territorial.
-8. Estabilidad de las cargas del ACP entre temporada de lluvias y temporada seca.
+Las figuras `figura_1.png` y `figura_2.png` corresponden a las Figuras 1 y 2 del manuscrito, y
+`figura_S1_sedimentacion.png` al gráfico de sedimentación suplementario. La carpeta
+`outputs/` contiene las salidas de la ejecución usada para el manuscrito; al correr el
+script se sobrescriben.
 
 ## Requisitos
 
-R ≥ 4.1 y los paquetes:
+Ejecutado con R 4.6.0 (ver `outputs/sessionInfo.txt`). Paquetes y versiones usadas:
+
+| Paquete | Versión |
+|---|---|
+| here | 1.0.2 |
+| readxl | 1.5.0 |
+| dplyr | 1.2.1 |
+| tidyr | 1.3.2 |
+| purrr | 1.2.2 |
+| ggplot2 | 4.0.3 |
+| cluster | 2.1.8.2 |
+| ggrepel | 0.9.8 |
+| scales | 1.4.0 |
+
+El script también llama funciones de `stringi` y `tibble` con `::`.
 
 ```r
-install.packages(c("readxl", "dplyr", "tidyr", "ggplot2", "factoextra", "corrplot"))
+install.packages(c("here", "readxl", "dplyr", "tidyr", "purrr", "ggplot2",
+                   "cluster", "ggrepel", "scales", "stringi", "tibble"))
 ```
-
-`factoextra` y `corrplot` solo hacen falta para las visualizaciones (comentadas en el script).
 
 ## Cómo ejecutarlo
 
-El script usa rutas relativas, así que debe correrse con el directorio de trabajo
-en la raíz del repositorio:
+Las rutas se resuelven desde la raíz del proyecto con `here::here()` (el archivo `.here`
+marca esa raíz), sin `setwd()`. Basta con abrir R en la carpeta del repositorio, o en
+cualquier subcarpeta, y ejecutar:
 
 ```r
-setwd("ruta/a/exposoma-ira-colombia")
-source("Script.R")
+source("Script_04.R")
 ```
 
-O bien abrir el proyecto en RStudio desde esta carpeta.
+## Uso de inteligencia artificial
+
+Como se declara en el manuscrito, Claude (Anthropic) se usó para la revisión y la
+reorganización del código de análisis en R. El código fue ejecutado por el autor sobre sus
+datos y todas las salidas fueron verificadas por él.
 
 ## Cita
 
@@ -78,5 +107,5 @@ Si usa este código o los datos, por favor cite el manuscrito asociado.
 
 ## Licencia
 
-Código bajo licencia MIT (ver `LICENSE`). Los datos climáticos derivan de fuentes
-del IDEAM; verifique sus condiciones de uso antes de redistribuirlos.
+Código bajo licencia MIT (ver `LICENSE`). Los datos climáticos derivan de fuentes del IDEAM;
+verifique sus condiciones de uso antes de redistribuirlos.
